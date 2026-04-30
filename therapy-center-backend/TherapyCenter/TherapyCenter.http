@@ -1,0 +1,421 @@
+
+# SEEDED CREDENTIALS:
+#   admin@therapy.com        →  Admin@123
+#   priya.doctor@therapy.com →  Doctor@123
+#   reception@therapy.com    →  Reception@123
+#   ramesh@therapy.com       →  Guardian@123
+#   patient@therapy.com      →  Patient@123
+# =============================================================
+
+# @host = https://localhost:7226
+
+# =============================================================
+# PHASE 1 — LOGIN
+# =============================================================
+
+@env=dev
+@host = https://localhost:7226
+### Login as Admin
+POST  https://localhost:7226/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@therapy.com",
+  "password": "Admin@123"
+}
+
+### Login as Doctor
+@host = https://localhost:7226
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "priya.doctor@therapy.com",
+  "password": "Doctor@123"
+}
+
+### Login as Receptionist
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "reception@therapy.com",
+  "password": "Reception@123"
+}
+
+### Login as Guardian
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ramesh@therapy.com",
+  "password": "Guardian@123"
+}
+
+### Login as Patient
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "patient@therapy.com",
+  "password": "Patient@123"
+}
+
+
+# =============================================================
+# PHASE 2 — AUTH: create new staff accounts
+# =============================================================
+
+### Admin creates a second Doctor account
+@adminToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJhZG1pbkB0aGVyYXB5LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IlN1cGVyIEFkbWluIiwiZXhwIjoxNzc0OTM5NjIzLCJpc3MiOiJUaGVyYXB5Q2VudGVyQVBJIiwiYXVkIjoiVGhlcmFweUNlbnRlclVzZXJzIn0.fRXD_5nes3MpLM-SN9fcG7Ts8YhrVwq36OVKg1JWOCU
+POST {{host}}/api/auth/create-staff
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "firstName": "Dr. Rahul",
+  "lastName": "Mehta",
+  "email": "rahul.doctor@therapy.com",
+  "password": "Doctor@123",
+  "role": "Doctor",
+  "phoneNumber": "9001122334"
+}
+
+### Admin creates another Receptionist
+POST {{host}}/api/auth/create-staff
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "firstName": "Sunita",
+  "lastName": "Joshi",
+  "email": "sunita@therapy.com",
+  "password": "Reception@123",
+  "role": "Receptionist",
+  "phoneNumber": "9445566778"
+}
+
+### Guardian self-registers (public — no token needed)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Deepa",
+  "lastName": "Singh",
+  "email": "deepa@gmail.com",
+  "password": "Guardian@123",
+  "role": "Guardian",
+  "phoneNumber": "9888877766"
+}
+
+### SECURITY TEST: Try registering as Admin — expect 400
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Hacker",
+  "lastName": "Test",
+  "email": "hack@test.com",
+  "password": "Test@123",
+  "role": "Admin",
+  "phoneNumber": "0000000000"
+}
+
+### SECURITY TEST: Wrong password — expect 401
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@therapy.com",
+  "password": "wrongpassword"
+}
+
+### SECURITY TEST: Duplicate email — expect 400
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Copy",
+  "lastName": "Cat",
+  "email": "ramesh@therapy.com",
+  "password": "Test@123",
+  "role": "Guardian",
+  "phoneNumber": "0000000000"
+}
+
+
+# =============================================================
+# PHASE 3 — ADMIN: therapies CRUD
+# =============================================================
+
+### Get all therapies (3 seeded: Speech, Occupational, Behavioral)
+GET {{host}}/api/admin/therapies
+Authorization: Bearer {{adminToken}}
+
+### Create a new therapy
+POST {{host}}/api/admin/therapies
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Physical Therapy",
+  "description": "Improves gross motor skills, balance and coordination for children with physical disabilities.",
+  "durationMinutes": 45,
+  "cost": 1100.00
+}
+
+### Update Speech Therapy (therapyId 1)
+PUT {{host}}/api/admin/therapies/{{therapyId_speech}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Speech Therapy (Advanced)",
+  "description": "Advanced speech therapy for children aged 3-15 with communication disorders.",
+  "durationMinutes": 60,
+  "cost": 1700.00
+}
+
+### Delete a therapy (use id=4 if you created Physical Therapy above)
+DELETE {{host}}/api/admin/therapies/4
+Authorization: Bearer {{adminToken}}
+
+### Get all receptionists
+GET {{host}}/api/admin/receptionists
+Authorization: Bearer {{adminToken}}
+
+
+# =============================================================
+# PHASE 4 — ADMIN: doctor profile + slot generation
+# =============================================================
+
+### Create doctor profile for Dr. Rahul (userId=6 from Phase 2)
+POST {{host}}/api/admin/doctors/profile
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "userId": 6,
+  "specialization": "Occupational Therapy",
+  "bio": "8 years experience in pediatric occupational therapy with focus on sensory integration.",
+  "availableDays": "Mon,Wed,Fri",
+  "startTime": "10:00:00",
+  "endTime": "16:00:00"
+}
+
+### Generate more slots for Dr. Priya (seed covers 07 Jul–11 Jul, extend to next week)
+POST {{host}}/api/admin/slots/generate
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "doctorId": {{doctorId}},
+  "fromDate": "2025-07-14",
+  "toDate": "2025-07-18"
+}
+
+
+# =============================================================
+# PHASE 5 — PATIENTS
+# =============================================================
+
+### Get all patients — staff only (3 seeded)
+GET {{host}}/api/patient
+Authorization: Bearer {{receptionistToken}}
+
+### Get Aarav's record (patientId 1)
+GET {{host}}/api/patient/{{patientId_aarav}}
+Authorization: Bearer {{receptionistToken}}
+
+### Guardian views their children — Aarav + Sia (guardianId 4)
+GET {{host}}/api/patient/guardian/{{guardianUserId}}
+Authorization: Bearer {{guardianToken}}
+
+### Receptionist creates a new walk-in patient
+POST {{host}}/api/patient
+Content-Type: application/json
+Authorization: Bearer {{receptionistToken}}
+
+{
+  "firstName": "Kabir",
+  "lastName": "Nair",
+  "dateOfBirth": "2019-05-10",
+  "gender": "Male",
+  "medicalHistory": "Autism Spectrum Disorder Level 1. Non-verbal at age 2, now has about 50 words.",
+  "guardianId": null
+}
+
+### SECURITY TEST: Guardian tries to get all patients — expect 403
+GET {{host}}/api/patient
+Authorization: Bearer {{guardianToken}}
+
+
+# =============================================================
+# PHASE 6 — DOCTORS AND SLOTS
+# =============================================================
+
+### Get all doctors
+GET {{host}}/api/doctor
+Authorization: Bearer {{guardianToken}}
+
+### Get Dr. Priya by ID
+GET {{host}}/api/doctor/{{doctorId}}
+Authorization: Bearer {{guardianToken}}
+
+### Get free slots for Dr. Priya on Monday
+### Seed booked slots 1 and 2, so slots 3-8 are free
+GET {{host}}/api/doctor/{{doctorId}}/slots?date=2025-07-07
+Authorization: Bearer {{guardianToken}}
+
+### Get free slots for Dr. Priya on Tuesday
+### Seed booked slot 9, so slots 10-16 are free
+GET {{host}}/api/doctor/{{doctorId}}/slots?date=2025-07-08
+Authorization: Bearer {{guardianToken}}
+
+### Doctor views their own schedule (userId read from JWT — no ID in URL)
+GET {{host}}/api/doctor/my-appointments
+Authorization: Bearer {{doctorToken}}
+
+### Staff views doctor's appointments by doctorId
+GET {{host}}/api/doctor/{{doctorId}}/appointments
+Authorization: Bearer {{receptionistToken}}
+
+
+# =============================================================
+# PHASE 7 — BOOKING
+# =============================================================
+
+### Receptionist books offline for Rohan — use slot 4 (free Monday)
+POST {{host}}/api/appointment/book
+Content-Type: application/json
+Authorization: Bearer {{receptionistToken}}
+
+{
+  "patientId": {{patientId_rohan}},
+  "doctorId": {{doctorId}},
+  "therapyId": {{therapyId_behav}},
+  "slotId": 4,
+  "receptionistId": {{receptionistUserId}},
+  "notes": "Second session for Rohan. Parents report improvement in focus at school."
+}
+
+### Guardian books online for Aarav — use slot 10 (free Tuesday)
+POST {{host}}/api/appointment/book-online
+Content-Type: application/json
+Authorization: Bearer {{guardianToken}}
+
+{
+  "patientId": {{patientId_aarav}},
+  "doctorId": {{doctorId}},
+  "therapyId": {{therapyId_speech}},
+  "slotId": 10,
+  "receptionistId": 999,
+  "notes": "Follow-up session. Guardian sending receptionistId=999 but server will set it null."
+}
+
+### SECURITY TEST: Book already-booked slot 1 — expect 409 Conflict
+POST {{host}}/api/appointment/book
+Content-Type: application/json
+Authorization: Bearer {{receptionistToken}}
+
+{
+  "patientId": {{patientId_aarav}},
+  "doctorId": {{doctorId}},
+  "therapyId": {{therapyId_speech}},
+  "slotId": 1,
+  "receptionistId": {{receptionistUserId}},
+  "notes": "Intentional double-booking test — expect 409"
+}
+
+### SECURITY TEST: Guardian on staff booking endpoint — expect 403
+POST {{host}}/api/appointment/book
+Content-Type: application/json
+Authorization: Bearer {{guardianToken}}
+
+{
+  "patientId": {{patientId_aarav}},
+  "doctorId": {{doctorId}},
+  "therapyId": {{therapyId_speech}},
+  "slotId": 5,
+  "receptionistId": null,
+  "notes": "Guardian trying staff endpoint — should fail 403"
+}
+
+
+# =============================================================
+# PHASE 8 — VIEWING APPOINTMENTS
+# =============================================================
+
+### Get appointment 1 (Completed + has finding + payment from seed)
+GET {{host}}/api/appointment/{{appointmentId}}
+Authorization: Bearer {{receptionistToken}}
+
+### Get all appointments for Aarav
+GET {{host}}/api/appointment/patient/{{patientId_aarav}}
+Authorization: Bearer {{guardianToken}}
+
+### Get all appointments for Sia
+GET {{host}}/api/appointment/patient/{{patientId_sia}}
+Authorization: Bearer {{guardianToken}}
+
+### Get all appointments on 2025-07-07 (staff)
+GET {{host}}/api/appointment/date/2025-07-07
+Authorization: Bearer {{receptionistToken}}
+
+### Get all appointments for Dr. Priya (staff)
+GET {{host}}/api/appointment/doctor/{{doctorId}}
+Authorization: Bearer {{receptionistToken}}
+
+
+# =============================================================
+# PHASE 9 — UPDATE APPOINTMENT STATUS
+# =============================================================
+
+### Mark Sia's appointment (id=2) as Completed after session
+PATCH {{host}}/api/appointment/2/status
+Content-Type: application/json
+Authorization: Bearer {{doctorToken}}
+
+{
+  "status": "Completed",
+  "notes": "Sia completed first occupational therapy session. Good response to sensory activities. Recommend bi-weekly sessions."
+}
+
+### Cancel Rohan's appointment (id=3)
+PATCH {{host}}/api/appointment/3/status
+Content-Type: application/json
+Authorization: Bearer {{receptionistToken}}
+
+{
+  "status": "Cancelled",
+  "notes": "Cancelled by parent — child unwell with fever. Will reschedule."
+}
+
+### Re-open Rohan's appointment back to Scheduled
+PATCH {{host}}/api/appointment/3/status
+Content-Type: application/json
+Authorization: Bearer {{receptionistToken}}
+
+{
+  "status": "Scheduled",
+  "notes": "Rescheduled after recovery."
+}
+
+
+# =============================================================
+# PHASE 10 — FINAL SECURITY CHECKS
+# =============================================================
+
+### No token — expect 401
+GET {{host}}/api/admin/therapies
+
+### No token on patient — expect 401
+GET {{host}}/api/patient
+
+### Guardian on admin route — expect 403
+GET {{host}}/api/admin/therapies
+Authorization: Bearer {{guardianToken}}
+
+### Patient token on admin route — expect 403
+GET {{host}}/api/admin/receptionists
+Authorization: Bearer {{patientToken}}
