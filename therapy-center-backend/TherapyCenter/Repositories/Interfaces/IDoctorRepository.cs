@@ -9,5 +9,6 @@ namespace TherapyCenter.Repositories.Interfaces
         Task<IEnumerable<Doctor>> GetAllAsync();
         Task<Doctor> CreateAsync(Doctor doctor);
         Task<Doctor> UpdateAsync(Doctor doctor);
+        Task DeleteAsync(int doctorId);
     }
 }

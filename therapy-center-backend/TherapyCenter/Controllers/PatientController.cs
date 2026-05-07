@@ -58,7 +58,7 @@ namespace TherapyCenter.API.Controllers
         // POST api/patient
         // Receptionist or Admin creates patient record (offline / walk-in)
         [HttpPost]
-        [Authorize(Policy = "StaffOnly")]
+        [Authorize(Policy = "PatientCreateAccess")]
         public async Task<IActionResult> Create([FromBody] CreatePatientRequest request)
         {
             var patient = await _patientService.CreateAsync(request);

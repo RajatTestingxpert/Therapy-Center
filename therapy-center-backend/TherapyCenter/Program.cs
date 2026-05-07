@@ -53,6 +53,7 @@ namespace TherapyCenter
                 options.AddPolicy("StaffOnly", p => p.RequireRole("Admin", "Receptionist"));
                 options.AddPolicy("DoctorOnly", p => p.RequireRole("Doctor"));
                 options.AddPolicy("PatientAccess", p => p.RequireRole("Patient", "Guardian"));
+                options.AddPolicy("PatientCreateAccess", p =>p.RequireRole("Admin", "Receptionist", "Guardian"));
                 options.AddPolicy("AllStaff", p => p.RequireRole("Admin", "Receptionist", "Doctor"));
             });
 
@@ -84,16 +85,7 @@ namespace TherapyCenter
 
             var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                // Make older databases compatible before EF Core queries start running.
-                EnsurePatientUserLinkSchemaAsync(db).GetAwaiter().GetResult();
-
-                // The database is self-healed above; avoid replaying a migration that may
-                // try to add the same column again on older databases.
-            }
+           
 
             app.UseHttpsRedirection();
             app.UseAuthentication();
@@ -102,100 +94,13 @@ namespace TherapyCenter
             app.Run();
         }
 
-        private static async Task EnsurePatientUserLinkSchemaAsync(AppDbContext db)
-        {
-            var connection = db.Database.GetDbConnection();
-            await db.Database.OpenConnectionAsync();
-
-            try
-            {
-                if (!await ColumnExistsAsync(connection, "Patients", "UserId"))
-                {
-                    await ExecuteAsync(connection, "ALTER TABLE `Patients` ADD COLUMN `UserId` int NULL");
-                }
-
-                if (!await IndexExistsAsync(connection, "Patients", "IX_Patients_UserId"))
-                {
-                    await ExecuteAsync(connection, "CREATE UNIQUE INDEX `IX_Patients_UserId` ON `Patients`(`UserId`)");
-                }
-
-                if (!await ForeignKeyExistsAsync(connection, "Patients", "FK_Patients_Users_UserId"))
-                {
-                    await ExecuteAsync(connection,
-                        "ALTER TABLE `Patients` ADD CONSTRAINT `FK_Patients_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users`(`UserId`) ON DELETE CASCADE");
-                }
-            }
-            finally
-            {
-                await db.Database.CloseConnectionAsync();
-            }
-        }
-
-        private static async Task<bool> ColumnExistsAsync(DbConnection connection, string tableName, string columnName)
-        {
-            await using var command = connection.CreateCommand();
-            command.CommandText = @"
-                SELECT 1
-                FROM information_schema.columns
-                WHERE table_schema = DATABASE()
-                  AND table_name = @tableName
-                  AND column_name = @columnName
-                LIMIT 1;";
-            AddParameter(command, "@tableName", tableName);
-            AddParameter(command, "@columnName", columnName);
-
-            var result = await command.ExecuteScalarAsync();
-            return result != null;
-        }
-
-        private static async Task<bool> IndexExistsAsync(DbConnection connection, string tableName, string indexName)
-        {
-            await using var command = connection.CreateCommand();
-            command.CommandText = @"
-                SELECT 1
-                FROM information_schema.statistics
-                WHERE table_schema = DATABASE()
-                  AND table_name = @tableName
-                  AND index_name = @indexName
-                LIMIT 1;";
-            AddParameter(command, "@tableName", tableName);
-            AddParameter(command, "@indexName", indexName);
-
-            var result = await command.ExecuteScalarAsync();
-            return result != null;
-        }
-
-        private static async Task<bool> ForeignKeyExistsAsync(DbConnection connection, string tableName, string constraintName)
-        {
-            await using var command = connection.CreateCommand();
-            command.CommandText = @"
-                SELECT 1
-                FROM information_schema.table_constraints
-                WHERE constraint_schema = DATABASE()
-                  AND table_name = @tableName
-                  AND constraint_name = @constraintName
-                  AND constraint_type = 'FOREIGN KEY'
-                LIMIT 1;";
-            AddParameter(command, "@tableName", tableName);
-            AddParameter(command, "@constraintName", constraintName);
-
-            var result = await command.ExecuteScalarAsync();
-            return result != null;
-        }
-
-        private static async Task ExecuteAsync(DbConnection connection, string sql)
-        {
-            await using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            await command.ExecuteNonQueryAsync();
-        }
-
-        private static void AddParameter(DbCommand command, string name, object value)
-        {
-            var parameter = command.CreateParameter();
-            parameter.ParameterName = name;
-            parameter.Value = value;
-            command.Parameters.Add(parameter);
-        }
     }
 }
+
+
+
+
+
+
+
+

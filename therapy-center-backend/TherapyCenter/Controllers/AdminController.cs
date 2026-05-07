@@ -70,6 +70,20 @@ namespace TherapyCenter.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        // DELETE api/admin/doctors/{id}
+        [HttpDelete("doctors/{id}")]
+        public async Task<IActionResult> DeleteDoctor(int id)
+        {
+            try
+            {
+                await _adminService.DeleteDoctorAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
 
         // ── Receptionists ──────────────────────────────────────────────────────
 

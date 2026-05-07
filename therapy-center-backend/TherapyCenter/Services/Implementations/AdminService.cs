@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TherapyCenter.DTO_s.Admin;
 using TherapyCenter.DTO_s.Doctor;
 using TherapyCenter.Entities;
@@ -37,6 +38,10 @@ namespace TherapyCenter.Services.Implementations
                 Cost = request.Cost
             };
             return await _therapyRepo.CreateAsync(therapy);
+        }
+        public async Task DeleteDoctorAsync(int doctorId)
+        {
+            await _doctorRepo.DeleteAsync(doctorId);
         }
 
         public async Task<Therapy> UpdateTherapyAsync(int therapyId, UpdateTherapyRequest request)
@@ -99,6 +104,7 @@ namespace TherapyCenter.Services.Implementations
             return ToResponse(created);
         }
 
+
         public async Task<IEnumerable<User>> GetAllReceptionistsAsync()
             => await _userRepo.GetByRoleAsync("Receptionist");
 
@@ -147,6 +153,7 @@ namespace TherapyCenter.Services.Implementations
             await _slotRepo.BulkCreateAsync(slots);
             return slots.Count;
         }
+
 
         private static DoctorResponse ToResponse(Doctor doctor)
         {

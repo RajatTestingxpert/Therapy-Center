@@ -46,6 +46,8 @@ export const admin = {
   updateTherapy: (id, body) => request('PUT', `/admin/therapies/${id}`, body),
   deleteTherapy: (id) => request('DELETE', `/admin/therapies/${id}`),
 
+  deleteDoctor: (id) => request('DELETE', `/admin/doctors/${id}`),
+
   createDoctorProfile: (body) => request('POST', '/admin/doctors/profile', body),
   getReceptionists: () => request('GET', '/admin/receptionists'),
   generateSlots: (body) => request('POST', '/admin/slots/generate', body),
