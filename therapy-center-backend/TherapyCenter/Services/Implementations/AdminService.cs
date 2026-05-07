@@ -13,17 +13,20 @@ namespace TherapyCenter.Services.Implementations
         private readonly IDoctorRepository _doctorRepo;
         private readonly IUserRepository _userRepo;
         private readonly ISlotRepository _slotRepo;
+        private readonly IAppointmentRepository _appointmentRepo;
 
         public AdminService(
             ITherapyRepository therapyRepo,
             IDoctorRepository doctorRepo,
             IUserRepository userRepo,
-            ISlotRepository slotRepo)
+            ISlotRepository slotRepo,
+             IAppointmentRepository appointmentRepo)
         {
             _therapyRepo = therapyRepo;
             _doctorRepo = doctorRepo;
             _userRepo = userRepo;
             _slotRepo = slotRepo;
+            _appointmentRepo = appointmentRepo;
         }
 
         // ── Therapy CRUD ───────────────────────────────────────────────────────
@@ -39,10 +42,7 @@ namespace TherapyCenter.Services.Implementations
             };
             return await _therapyRepo.CreateAsync(therapy);
         }
-        public async Task DeleteDoctorAsync(int doctorId)
-        {
-            await _doctorRepo.DeleteAsync(doctorId);
-        }
+       
 
         public async Task<Therapy> UpdateTherapyAsync(int therapyId, UpdateTherapyRequest request)
         {
@@ -102,6 +102,19 @@ namespace TherapyCenter.Services.Implementations
 
             var created = await _doctorRepo.CreateAsync(doctor);
             return ToResponse(created);
+        }
+        public async Task DeleteDoctorAsync(int doctorId)
+        {
+            var appointments = await _appointmentRepo.GetByDoctorIdAsync(doctorId);
+
+            if (appointments.Any())
+            {
+                throw new InvalidOperationException(
+                    "Cannot delete doctor with existing appointments."
+                );
+            }
+
+            await _doctorRepo.DeleteAsync(doctorId);
         }
 
 

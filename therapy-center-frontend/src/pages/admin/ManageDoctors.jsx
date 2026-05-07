@@ -106,21 +106,30 @@ export default function ManageDoctors() {
   }
 
   async function handleDeleteDoctor(id) {
-    const ok = window.confirm('Delete this doctor?')
-    if (!ok) return
+  const ok = window.confirm('Delete this doctor?')
+  
+  if (!ok) return
 
-    setError('')
-    setSuccess('')
-    try {
-      await admin.deleteDoctor(id)
-      setDoctorList((prev) =>
-        prev.filter((d) => (d.doctorId ?? d.DoctorId) !== id)
-      )
-      setSuccess('Doctor deleted successfully.')
-    } catch (e) {
-      setError(e.message)
-    }
+  setError('')
+  setSuccess('')
+
+  try {
+    await admin.deleteDoctor(id)
+
+    setDoctorList((prev) =>
+      prev.filter((d) => (d.doctorId ?? d.DoctorId) !== id)
+    )
+
+    setSuccess('Doctor deleted successfully.')
+  } catch (e) {
+    const msg =
+      e?.response?.data?.message ||
+      e?.message ||
+      'Failed to delete doctor'
+
+    setError(msg)
   }
+}
 
   function setA(field) {
     return (e) => setAccForm({ ...accForm, [field]: e.target.value })

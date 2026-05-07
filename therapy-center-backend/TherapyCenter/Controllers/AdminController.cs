@@ -77,11 +77,15 @@ namespace TherapyCenter.API.Controllers
             try
             {
                 await _adminService.DeleteDoctorAsync(id);
+
                 return NoContent();
             }
-            catch (KeyNotFoundException ex)
+            catch (InvalidOperationException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
