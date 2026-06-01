@@ -67,7 +67,10 @@ namespace TherapyCenter
             builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
             builder.Services.AddScoped<ISlotRepository, SlotRepository>();
 
-            // ── 5. Services ───────────────────────────────────────────────────────────────
+            // ── 5. Unit of Work ───────────────────────────────────────────────────────────
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            // ── 6. Services ───────────────────────────────────────────────────────────────
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
@@ -75,6 +78,18 @@ namespace TherapyCenter
             builder.Services.AddScoped<IDoctorService, DoctorService>();
             builder.Services.AddScoped<ISlotService, SlotService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddScoped<IFindingService, FindingService>();
+
+            // ── 7. CORS ───────────────────────────────────────────────────────────────────
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -85,7 +100,7 @@ namespace TherapyCenter
 
             var app = builder.Build();
 
-           
+            app.UseCors("AllowFrontend");
 
             app.UseHttpsRedirection();
             app.UseAuthentication();

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TherapyCenter.DTO_s.Finding;
 using TherapyCenter.Services.Interfaces;
-
 
 namespace TherapyCenter.API.Controllers
 {
@@ -13,11 +13,16 @@ namespace TherapyCenter.API.Controllers
     {
         private readonly IDoctorService _doctorService;
         private readonly IAppointmentService _appointmentService;
+        private readonly IFindingService _findingService;
 
-        public DoctorController(IDoctorService doctorService, IAppointmentService appointmentService)
+        public DoctorController(
+            IDoctorService doctorService,
+            IAppointmentService appointmentService,
+            IFindingService findingService)
         {
             _doctorService = doctorService;
             _appointmentService = appointmentService;
+            _findingService = findingService;
         }
 
         // GET api/doctor
@@ -64,6 +69,44 @@ namespace TherapyCenter.API.Controllers
                 return NotFound(new { message = "Doctor profile not found for this user." });
 
             return Ok(await _appointmentService.GetByDoctorAsync(doctor.DoctorId));
+        }
+
+        // GET api/doctor/appointments/15/finding
+        [HttpGet("appointments/{appointmentId}/finding")]
+        [Authorize(Policy = "DoctorOnly")]
+        public async Task<IActionResult> GetFinding(int appointmentId)
+        {
+            var finding = await _findingService.GetByAppointmentAsync(appointmentId);
+            return finding == null ? NotFound() : Ok(finding);
+        }
+
+        // PUT api/doctor/appointments/15/finding
+        [HttpPut("appointments/{appointmentId}/finding")]
+        [Authorize(Policy = "DoctorOnly")]
+        public async Task<IActionResult> SaveFinding(int appointmentId, [FromBody] UpsertFindingRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Invalid token." });
+
+            var doctor = await _doctorService.GetByUserIdAsync(userId);
+
+            if (doctor == null)
+                return NotFound(new { message = "Doctor profile not found for this user." });
+
+            try
+            {
+                return Ok(await _findingService.UpsertAsync(doctor.DoctorId, appointmentId, request));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

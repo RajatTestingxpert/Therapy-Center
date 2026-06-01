@@ -123,7 +123,7 @@ export default function ManageTherapies() {
                     <td className="fw-600">{t.name}</td>
                     <td className="text-muted">{t.description || '—'}</td>
                     <td>{t.durationMinutes} min</td>
-                    <td>${Number(t.cost).toFixed(2)}</td>
+                    <td>Rs.{Number(t.cost).toFixed(2)}</td>
                     <td>
                       <div className="flex gap-8">
                         <button className="btn btn-secondary btn-sm" onClick={() => openEdit(t)}>Edit</button>
@@ -166,7 +166,7 @@ export default function ManageTherapies() {
               <input type="number" min="1" value={form.durationMinutes} onChange={set('durationMinutes')} />
             </div>
             <div className="form-group">
-              <label>Cost ($) *</label>
+              <label>Cost (Rs) *</label>
               <input type="number" min="0" step="0.01" value={form.cost} onChange={set('cost')} />
             </div>
           </div>

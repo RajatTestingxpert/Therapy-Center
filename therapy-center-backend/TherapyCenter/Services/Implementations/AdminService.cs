@@ -166,6 +166,17 @@ namespace TherapyCenter.Services.Implementations
             await _slotRepo.BulkCreateAsync(slots);
             return slots.Count;
         }
+        public async Task DeactivateStaffAsync(int userId)
+        {
+            var user = await _userRepo.GetByIdAsync(userId)
+                       ?? throw new KeyNotFoundException("User not found.");
+
+            if (string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Admin account cannot be removed.");
+
+            user.IsActive = false;
+            await _userRepo.UpdateAsync(user);
+        }
 
 
         private static DoctorResponse ToResponse(Doctor doctor)

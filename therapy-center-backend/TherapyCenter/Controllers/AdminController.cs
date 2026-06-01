@@ -95,6 +95,24 @@ namespace TherapyCenter.API.Controllers
         [HttpGet("receptionists")]
         public async Task<IActionResult> GetReceptionists()
             => Ok(await _adminService.GetAllReceptionistsAsync());
+        // DELETE api/admin/staff/7
+        [HttpDelete("staff/{id}")]
+        public async Task<IActionResult> DeleteStaff(int id)
+        {
+            try
+            {
+                await _adminService.DeactivateStaffAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
         // ── Slot generation ────────────────────────────────────────────────────
 

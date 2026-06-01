@@ -1,6 +1,5 @@
-using Microsoft.EntityFrameworkCore;
-using TherapyCenter.Data;
 using TherapyCenter.DTO_s.Appointment;
+using TherapyCenter.Entities;
 using TherapyCenter.Repositories.Interfaces;
 using TherapyCenter.Services.Interfaces;
 using AppointmentEntity = TherapyCenter.Entities.Appointment;
@@ -13,20 +12,23 @@ namespace TherapyCenter.Services.Implementations
         private readonly ISlotRepository _slotRepo;
         private readonly ITherapyRepository _therapyRepo;
         private readonly IDoctorRepository _doctorRepo;
-        private readonly AppDbContext _context;
+        private readonly IPaymentRepository _paymentRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AppointmentService(
             IAppointmentRepository appointmentRepo,
             ISlotRepository slotRepo,
             ITherapyRepository therapyRepo,
             IDoctorRepository doctorRepo,
-            AppDbContext context)
+            IPaymentRepository paymentRepo,
+            IUnitOfWork unitOfWork)
         {
             _appointmentRepo = appointmentRepo;
             _slotRepo = slotRepo;
             _therapyRepo = therapyRepo;
             _doctorRepo = doctorRepo;
-            _context = context;
+            _paymentRepo = paymentRepo;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<AppointmentEntity> BookAsync(BookAppointmentRequest request)
@@ -43,7 +45,7 @@ namespace TherapyCenter.Services.Implementations
             if (request.SlotId <= 0)
                 throw new InvalidOperationException("Slot is required.");
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             var slot = await _slotRepo.GetByIdAsync(request.SlotId)
                        ?? throw new KeyNotFoundException("Slot not found.");
@@ -80,7 +82,17 @@ namespace TherapyCenter.Services.Implementations
             };
 
             var created = await _appointmentRepo.CreateAsync(appointment);
-            await transaction.CommitAsync();
+
+            await _paymentRepo.CreateAsync(new Payment
+            {
+                AppointmentId = created.AppointmentId,
+                Amount = therapy.Cost,
+                PaymentMethod = null,
+                TransactionId = null,
+                Status = "Pending"
+            });
+
+            await _unitOfWork.CommitAsync();
             return created;
         }
 

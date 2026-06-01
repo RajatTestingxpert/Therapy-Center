@@ -25,18 +25,22 @@ namespace TherapyCenter.Repositories.Implementations
                              .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
 
         public async Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId)
-            => await _context.Appointments
-                             .Include(a => a.Doctor).ThenInclude(d => d.User)
-                             .Include(a => a.Therapy)
-                             .Include(a => a.Finding)
-                             .Where(a => a.PatientId == patientId)
-                             .OrderByDescending(a => a.AppointmentDate)
-                             .ToListAsync();
+     => await _context.Appointments
+                      .Include(a => a.Doctor).ThenInclude(d => d.User)
+                      .Include(a => a.Therapy)
+                      .Include(a => a.Finding)
+                      .Include(a => a.Payment)
+                      .Where(a => a.PatientId == patientId)
+                      .OrderByDescending(a => a.AppointmentDate)
+                      .ThenByDescending(a => a.StartTime)
+                      .ToListAsync();
 
         public async Task<IEnumerable<Appointment>> GetByDoctorIdAsync(int doctorId)
             => await _context.Appointments
                              .Include(a => a.Patient)
                              .Include(a => a.Therapy)
+                             .Include(a => a.Finding)
+                             .Include(a => a.Payment)
                              .Where(a => a.DoctorId == doctorId)
                              .OrderBy(a => a.AppointmentDate)
                              .ThenBy(a => a.StartTime)
@@ -47,6 +51,8 @@ namespace TherapyCenter.Repositories.Implementations
                              .Include(a => a.Patient)
                              .Include(a => a.Doctor).ThenInclude(d => d.User)
                              .Include(a => a.Therapy)
+                             .Include(a => a.Finding)
+                             .Include(a => a.Payment)
                              .Where(a => a.AppointmentDate == date)
                              .ToListAsync();
 

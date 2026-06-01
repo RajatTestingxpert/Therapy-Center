@@ -227,19 +227,53 @@ export default function PatientDashboard() {
           ) : (
             <table>
               <thead>
-                <tr><th>#</th><th>Date</th><th>Doctor</th><th>Therapy</th><th>Time</th><th>Status</th></tr>
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Doctor</th>
+                  <th>Therapy</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Report</th>
+                </tr>
               </thead>
               <tbody>
-                {appts.map(a => (
-                  <tr key={a.appointmentId}>
-                    <td className="text-muted">{a.appointmentId}</td>
-                    <td>{a.appointmentDate}</td>
-                    <td className="fw-600">Dr. {doctorName(a.doctor)}</td>
-                    <td>{therapyName(a.therapy)}</td>
-                    <td>{a.startTime}</td>
-                    <td>{statusBadge(a.status)}</td>
-                  </tr>
-                ))}
+                {appts.map(a => {
+                  const paymentStatus = a.payment?.status ?? a.payment?.Status ?? 'Pending'
+                  const report = a.finding
+
+                  return (
+                    <tr key={a.appointmentId}>
+                      <td className="text-muted">{a.appointmentId}</td>
+                      <td>{a.appointmentDate}</td>
+                      <td className="fw-600">Dr. {doctorName(a.doctor)}</td>
+                      <td>{therapyName(a.therapy)}</td>
+                      <td>{a.startTime}</td>
+                      <td>{statusBadge(a.status)}</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            paymentStatus === 'Paid' ? 'badge-green' : 'badge-yellow'
+                          }`}
+                        >
+                          {paymentStatus}
+                        </span>
+                      </td>
+                      <td>
+                        {report ? (
+                          <div style={{ fontSize: 12 }}>
+                            <div><strong>Obs:</strong> {report.observations || '—'}</div>
+                            <div><strong>Rec:</strong> {report.recommendations || '—'}</div>
+                            <div><strong>Next:</strong> {report.nextSessionDate || '—'}</div>
+                          </div>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}

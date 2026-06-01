@@ -69,28 +69,41 @@ export default function StaffAppointments() {
           ) : (
             <table>
               <thead>
-                <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Therapy</th><th>Time</th><th>Notes</th><th>Status</th><th>Update</th></tr>
-              </thead>
+  <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Therapy</th><th>Time</th><th>Notes</th><th>Status</th><th>Payment</th><th>Action</th><th>Update</th></tr>
+</thead>
               <tbody>
                 {list.map(a => (
                   <tr key={a.appointmentId}>
-                    <td className="text-muted">{a.appointmentId}</td>
-                    <td className="fw-600">{patientName(a.patient)}</td>
-                    <td>{doctorName(a.doctor)}</td>
-                    <td>{therapyName(a.therapy)}</td>
-                    <td>{a.startTime}</td>
-                    <td className="text-muted">{a.notes || '—'}</td>
-                    <td>{statusBadge(a.status)}</td>
-                    <td>
-                      <select
-                        value={a.status}
-                        onChange={e => updateStatus(a.appointmentId, e.target.value)}
-                        style={{ padding: '4px 8px', fontSize: 12 }}
-                      >
-                        {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                    </td>
-                  </tr>
+  <td className="text-muted">{a.appointmentId}</td>
+  <td className="fw-600">{patientName(a.patient)}</td>
+  <td>{doctorName(a.doctor)}</td>
+  <td>{therapyName(a.therapy)}</td>
+  <td>{a.startTime}</td>
+  <td className="text-muted">{a.notes || '—'}</td>
+  <td>{statusBadge(a.status)}</td>
+  <td>{paymentBadge(a.payment)}</td>
+  <td>
+    {(a.payment?.status ?? a.payment?.Status) !== 'Paid' ? (
+      <button
+        className="btn btn-secondary btn-sm"
+        onClick={() => markPaid(a.appointmentId)}
+      >
+        Mark Paid
+      </button>
+    ) : (
+      '—'
+    )}
+  </td>
+  <td>
+    <select
+      value={a.status}
+      onChange={e => updateStatus(a.appointmentId, e.target.value)}
+      style={{ padding: '4px 8px', fontSize: 12 }}
+    >
+      {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
+    </select>
+  </td>
+</tr>
                 ))}
               </tbody>
             </table>

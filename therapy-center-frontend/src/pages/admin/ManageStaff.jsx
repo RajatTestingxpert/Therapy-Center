@@ -39,7 +39,21 @@ export default function ManageStaff() {
     }
   }
 
-  function set(field) { return e => setForm({ ...form, [field]: e.target.value }) }
+  async function handleRemove(id) {
+    if (!confirm('Deactivate this staff account?')) return
+    setError('')
+    try {
+      await admin.deleteStaff(id)
+      setSuccess('Staff account removed.')
+      load()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  function set(field) {
+    return e => setForm({ ...form, [field]: e.target.value })
+  }
 
   return (
     <div>
@@ -48,7 +62,10 @@ export default function ManageStaff() {
           <h1>Staff Management</h1>
           <p>Create and view receptionist accounts</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setForm(EMPTY); setError(''); setShowModal(true) }}>
+        <button
+          className="btn btn-primary"
+          onClick={() => { setForm(EMPTY); setError(''); setShowModal(true) }}
+        >
           + Add Staff
         </button>
       </div>
@@ -69,7 +86,7 @@ export default function ManageStaff() {
           ) : (
             <table>
               <thead>
-                <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th></tr>
+                <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 {receptionists.map(r => (
@@ -83,6 +100,11 @@ export default function ManageStaff() {
                         {r.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
+                    <td>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleRemove(r.userId)}>
+                        Remove
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -92,11 +114,15 @@ export default function ManageStaff() {
       </div>
 
       {showModal && (
-        <Modal title="Create Staff Account" onClose={() => setShowModal(false)}
+        <Modal
+          title="Create Staff Account"
+          onClose={() => setShowModal(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleCreate} disabled={saving}>{saving ? 'Creating…' : 'Create'}</button>
+              <button className="btn btn-primary" onClick={handleCreate} disabled={saving}>
+                {saving ? 'Creating…' : 'Create'}
+              </button>
             </>
           }
         >

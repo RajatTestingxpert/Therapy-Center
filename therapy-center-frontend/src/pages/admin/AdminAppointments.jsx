@@ -1,11 +1,22 @@
 import { useState } from 'react'
-import { appointments } from '../../api/api'
+import { appointments, payments } from '../../api/api'
 import { doctorName, patientName, therapyName } from '../../utils/display'
 
 const STATUS_OPTIONS = ['Scheduled', 'Completed', 'Cancelled']
 
 function statusBadge(status) {
   const map = { Scheduled: 'badge-blue', Completed: 'badge-green', Cancelled: 'badge-red' }
+  return <span className={`badge ${map[status] || 'badge-gray'}`}>{status}</span>
+}
+
+function paymentBadge(payment) {
+  const status = payment?.status ?? payment?.Status ?? 'Pending'
+  const map = {
+    Pending: 'badge-yellow',
+    Paid: 'badge-green',
+    Failed: 'badge-red',
+    Refunded: 'badge-gray',
+  }
   return <span className={`badge ${map[status] || 'badge-gray'}`}>{status}</span>
 }
 
@@ -32,9 +43,24 @@ export default function AdminAppointments() {
 
   async function updateStatus(id, status) {
     setUpdatingId(id)
+    setError('')
     try {
       await appointments.updateStatus(id, { status })
       setSuccess(`Appointment #${id} marked as ${status}.`)
+      loadByDate()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  async function markPaid(id) {
+    setUpdatingId(id)
+    setError('')
+    try {
+      await payments.markPaid(id, { transactionId: null })
+      setSuccess(`Payment for appointment #${id} marked as Paid.`)
       loadByDate()
     } catch (e) {
       setError(e.message)
@@ -80,30 +106,54 @@ export default function AdminAppointments() {
                   <th>Therapy</th>
                   <th>Time</th>
                   <th>Status</th>
+                  <th>Payment</th>
+                  <th>Action</th>
                   <th>Update Status</th>
                 </tr>
               </thead>
               <tbody>
-                {list.map(a => (
-                  <tr key={a.appointmentId}>
-                    <td className="text-muted">{a.appointmentId}</td>
-                    <td className="fw-600">{patientName(a.patient)}</td>
-                    <td>{doctorName(a.doctor)}</td>
-                    <td>{therapyName(a.therapy)}</td>
-                    <td>{a.startTime} – {a.endTime}</td>
-                    <td>{statusBadge(a.status)}</td>
-                    <td>
-                      <select
-                        value={a.status}
-                        disabled={updatingId === a.appointmentId}
-                        onChange={e => updateStatus(a.appointmentId, e.target.value)}
-                        style={{ padding: '4px 8px', fontSize: 12 }}
-                      >
-                        {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
+                {list.map(a => {
+                  const paymentStatus = a.payment?.status ?? a.payment?.Status ?? 'Pending'
+
+                  return (
+                    <tr key={a.appointmentId}>
+                      <td className="text-muted">{a.appointmentId}</td>
+                      <td className="fw-600">{patientName(a.patient)}</td>
+                      <td>{doctorName(a.doctor)}</td>
+                      <td>{therapyName(a.therapy)}</td>
+                      <td>
+                        {a.startTime} – {a.endTime}
+                      </td>
+                      <td>{statusBadge(a.status)}</td>
+                      <td>{paymentBadge(a.payment)}</td>
+                      <td>
+                        {paymentStatus !== 'Paid' ? (
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => markPaid(a.appointmentId)}
+                            disabled={updatingId === a.appointmentId}
+                          >
+                            Mark Paid
+                          </button>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td>
+                        <select
+                          value={a.status}
+                          disabled={updatingId === a.appointmentId}
+                          onChange={e => updateStatus(a.appointmentId, e.target.value)}
+                          style={{ padding: '4px 8px', fontSize: 12 }}
+                        >
+                          {STATUS_OPTIONS.map(s => (
+                            <option key={s}>{s}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}

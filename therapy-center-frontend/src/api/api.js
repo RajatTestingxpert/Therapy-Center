@@ -47,6 +47,7 @@ export const admin = {
   deleteTherapy: (id) => request('DELETE', `/admin/therapies/${id}`),
 
   deleteDoctor: (id) => request('DELETE', `/admin/doctors/${id}`),
+  deleteStaff: (id) => request('DELETE', `/admin/staff/${id}`),
 
   createDoctorProfile: (body) => request('POST', '/admin/doctors/profile', body),
   getReceptionists: () => request('GET', '/admin/receptionists'),
@@ -81,4 +82,15 @@ export const appointments = {
   getByDoctor: (doctorId) => request('GET', `/appointment/doctor/${doctorId}`),
   getByDate: (date) => request('GET', `/appointment/date/${date}`),
   updateStatus: (id, body) => request('PATCH', `/appointment/${id}/status`, body),
+}
+export const payments = {
+  getByAppointment: (appointmentId) => request('GET', `/payment/appointment/${appointmentId}`),
+  getByPatient: (patientId) => request('GET', `/payment/patient/${patientId}`),
+  record: (body) => request('POST', '/payment', body),
+  markPaid: (appointmentId, body = {}) => request('PATCH', `/payment/${appointmentId}/paid`, body),
+}
+export const findings = {
+  getByAppointment: (appointmentId) => request('GET', `/doctor/appointments/${appointmentId}/finding`),
+  save: (appointmentId, body) => request('PUT', `/doctor/appointments/${appointmentId}/finding`, body),
+  
 }
